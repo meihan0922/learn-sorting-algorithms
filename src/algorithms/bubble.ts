@@ -39,7 +39,7 @@ export function* bubbleSortGenerator(array: number[]) {
     swapped = false;
     for (let i = 0; i < n - 1; i++) {
       yield [
-        [i], // 標記正在比較的位置
+        [i, i + 1], // 標記正在比較的位置
         Array.from(
           { length: array.length - n },
           (_, i) => array.length - i - 1 // 標記哪些 index 已經排好了
@@ -50,9 +50,17 @@ export function* bubbleSortGenerator(array: number[]) {
         // 交換
         [array[i], array[i + 1]] = [array[i + 1], array[i]];
         swapped = true;
+        // 做交換的動畫
+        yield [
+          [i + 1, i],
+          Array.from(
+            { length: array.length - n },
+            (_, i) => array.length - i - 1
+          ),
+        ] as [number[], number[]];
       }
-      n--;
     }
+    n--;
   }
 
   // 回傳，補上全部完成！讓動畫可以進行變色
