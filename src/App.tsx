@@ -12,13 +12,56 @@ import { Button } from "./components/button";
 import { Slider } from "./components/slider";
 import { useReducer } from "react";
 import { cn } from "./utils";
+import {
+  bubbleSortGenerator,
+  bubbleSort_v1,
+  bubbleSort_v2,
+} from "./algorithms/bubble";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const SORTING_ALGORITHMS_NOTE = {
-  bubble: { title: "bubble 氣泡排序法", note: "bubble 氣泡排序法" },
-  insertion: { title: "insertion 插入排序法", note: "insertion 插入排序法" },
-  selection: { title: "selection 選擇排序", note: "selection 選擇排序" },
-  quick: { title: "quick 快速排序法", note: "quick 快速排序法" },
-  merge: { title: "merge 合併排序法", note: "merge 合併排序法" },
+  bubble: {
+    title: "🫧 bubble 氣泡排序法",
+    point: "兩兩相比，大的往後換",
+    note: "每次比對相鄰的兩個數字，把比較大的慢慢「浮」到右邊（也就是陣列的尾端），一輪一輪重複這個動作。也就是說，每一輪最大的項目都會被排好，也就是說會進行 n(n - 1) / 2 次，（下一輪次數會逐一遞減）。可以優化的方式是，設一個 flag 紀錄在第一輪結束後，發現都沒有交換時，表示已經是有序的，就不用再處理了",
+    form: [
+      "時間複雜度：最壞與平均都是 O(n²)",
+      "穩定性：穩定排序（相同數字順序不會改變）",
+      "額外空間：O(1)（原地排序）",
+      "👍 優點：實作簡單，教學友善",
+      "👎 缺點：效率低，不適合大資料量",
+    ],
+    func: [bubbleSort_v1, bubbleSort_v2],
+  },
+  insertion: {
+    title: "insertion 插入排序法",
+    point: "",
+    note: "",
+    form: [],
+    func: [],
+  },
+  selection: {
+    title: "selection 選擇排序",
+    point: "",
+    note: "",
+    form: [],
+    func: [],
+  },
+  quick: {
+    title: "quick 快速排序法",
+    point: "",
+    note: "",
+    form: [],
+    func: [],
+  },
+  merge: {
+    title: "merge 合併排序法",
+    point: "",
+    note: "",
+    form: [],
+    func: [],
+  },
 };
 
 const MAX_ARRAY_LENGTH = 200;
@@ -41,8 +84,10 @@ type State = {
   sortingAlgorithm: SortingAlgorithm;
   sortingSpeed: number;
   randomArray: number[];
-  // activeIndices: number[]
-  // sortedIndices: number[]
+  // ! 正在被比較的兩個位置
+  activeIndices: number[];
+  // ! 已經處理完成的位置、不再需要處理的資料索引
+  sortedIndices: number[];
   // activeSortingFunction?: Generator<[number[], number[]]>
   isSorting: boolean;
 };
@@ -117,13 +162,24 @@ function reducer(state: State, action: Action): State {
 }
 
 function App() {
-  const [{ sortingAlgorithm, sortingSpeed, randomArray, isSorting }, dispatch] =
-    useReducer(reducer, {
-      sortingAlgorithm: "bubble",
-      sortingSpeed: 1,
-      randomArray: getRandomElements(10),
-      isSorting: false,
-    });
+  const [
+    {
+      sortedIndices,
+      activeIndices,
+      sortingAlgorithm,
+      sortingSpeed,
+      randomArray,
+      isSorting,
+    },
+    dispatch,
+  ] = useReducer(reducer, {
+    sortingAlgorithm: "bubble",
+    sortingSpeed: 1,
+    randomArray: getRandomElements(10),
+    isSorting: false,
+    activeIndices: [],
+    sortedIndices: [],
+  });
 
   return (
     <>
@@ -210,22 +266,64 @@ function App() {
               <div
                 key={index}
                 className={cn(
-                  "grow flex items-end justify-center pb-2 bg-muted"
-                  // sortedIndices.includes(index) && "bg-secondary",
-                  // activeIndices.includes(index) && "bg-accent"
+                  "grow flex items-end justify-center pb-2 bg-muted",
+                  sortedIndices.includes(index) && "bg-secondary",
+                  activeIndices.includes(index) && "bg-accent"
                 )}
                 style={{ height: `${value}%` }}
               />
             ))}
           </div>
-          <div className="flex-1/3 h-full p-8 border-l-2 ml-8">
-            <h5>{SORTING_ALGORITHMS_NOTE[sortingAlgorithm].title}</h5>
-            <span>{SORTING_ALGORITHMS_NOTE[sortingAlgorithm].note}</span>
+          <div className="flex-2/5 h-full p-8 pr-0 border-l-2 ml-8 text-left overflow-scroll">
+            <h2 className="text-2xl mb-4 font-bold">
+              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].title}
+            </h2>
+            <p className="font-medium mb-1.5">
+              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].point}
+            </p>
+            <span className="text-sm">
+              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].note}
+            </span>
+            <ul className="mt-10 text-sm">
+              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].form.map((i) => {
+                return <li key={i}>- {i}</li>;
+              })}
+            </ul>
+            <ul className="mt-10 text-sm">
+              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].func.map((i, idx) => {
+                return <FunctionViewer func={i} key={idx} />;
+              })}
+            </ul>
           </div>
         </main>
       </div>
     </>
   );
+}
+
+const FunctionViewer = ({ func }: { func: (array: number[]) => number[] }) => {
+  return (
+    <SyntaxHighlighter language="javascript" style={vscDarkPlus}>
+      {func.toString()}
+    </SyntaxHighlighter>
+  );
+};
+
+function getSortingFunction(algorithm: SortingAlgorithm) {
+  switch (algorithm) {
+    case "bubble":
+      return bubbleSortGenerator;
+    case "insertion":
+      return bubbleSortGenerator;
+    case "selection":
+      return bubbleSortGenerator;
+    case "quick":
+      return bubbleSortGenerator;
+    case "merge":
+      return bubbleSortGenerator;
+    default:
+      throw new Error(`Invalid algorithm: ${algorithm satisfies never}`);
+  }
 }
 
 export default App;
