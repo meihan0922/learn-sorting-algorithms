@@ -10,7 +10,7 @@ import { Label } from "./components/label";
 import { Input } from "./components/input";
 import { Button } from "./components/button";
 import { Slider } from "./components/slider";
-import { FormEvent, useReducer } from "react";
+import { FormEvent, useEffect, useReducer } from "react";
 import { cn } from "./utils";
 import {
   bubbleSortGenerator,
@@ -189,6 +189,7 @@ function App() {
       sortingSpeed,
       randomArray,
       isSorting,
+      activeSortingFunction,
     },
     dispatch,
   ] = useReducer(reducer, {
@@ -198,6 +199,7 @@ function App() {
     isSorting: false,
     activeIndices: [],
     sortedIndices: [],
+    activeSortingFunction: undefined,
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -209,6 +211,51 @@ function App() {
       dispatch({ type: "SORT" });
     }
   }
+
+  // 只要變換排序法或暫停或改變速度，就不再繼續執行
+  useEffect(() => {
+    /**
+     * ? 為什麼需要設定 isCancel 這個 flag?
+     * 1. effect 的 dependencies 改變時，跑上一次的清除函式，才執行新的 effect
+     * 2. 元件 unmount 時
+     * 但是， inner() 是一個 async 函式，他會在背景繼續執行，即使上一個 effect 已經清掉了，非同步函式仍然不會暫停！
+     * ! react 只會取消該 effect 的生命週期，非同步的事件循環是無法阻止的
+     * 如果！非同步的函式中，又去執行 dispatch 那麼有可能會試圖去更新被卸載的元件，
+     * ! 也就會發生記憶體洩漏，isCancel 會自行中斷後續的操作，
+     * ! 只要在 useEffect 裡用到 async function、setTimeout、fetch、動畫、WebSocket 等延遲/持續型操作，都強烈建議這樣做保險
+     */
+    let isCancel = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function inner() {
+      while (activeSortingFunction && isSorting && !isCancel) {
+        const {
+          done,
+          value: [active, sorted],
+        } = activeSortingFunction.next();
+        if (done) {
+          dispatch({ type: "FINISH_SORTING" });
+          return;
+        }
+        dispatch({ type: "SET_INDICES", payload: { active, sorted } });
+        // 簡單的非同步「計時器」，用來控制排序動畫的速度
+        await new Promise((resolve) => {
+          // * 1000 / OPERATIONS_PER_SECOND 一秒執行幾次
+          // * sortingSpeed 再加速
+          timer = setTimeout(
+            resolve,
+            1000 / OPERATIONS_PER_SECOND / sortingSpeed
+          );
+        });
+      }
+    }
+
+    inner();
+
+    return () => {
+      clearTimeout(timer);
+      isCancel = true;
+    };
+  }, [activeSortingFunction, isSorting, sortingSpeed]);
 
   return (
     <>
@@ -300,7 +347,8 @@ function App() {
                 className={cn(
                   "grow flex items-end justify-center pb-2 bg-muted",
                   sortedIndices.includes(index) && "bg-secondary",
-                  activeIndices.includes(index) && "bg-accent"
+                  activeIndices[0] === index && "bg-accent",
+                  activeIndices[1] === index && "bg-accent opacity-70"
                 )}
                 style={{ height: `${value}%` }}
               />
