@@ -44,7 +44,7 @@ export function* bubbleSortGenerator(array: number[]) {
           { length: array.length - n },
           (_, i) => array.length - i - 1 // 標記哪些 index 已經排好了
         ), // ex: [7, 8, 9] 已經排序完成
-      ];
+      ] as [number[], number[]];
       // 左右相比
       if (array[i] > array[i + 1]) {
         // 交換
@@ -56,7 +56,10 @@ export function* bubbleSortGenerator(array: number[]) {
   }
 
   // 回傳，補上全部完成！讓動畫可以進行變色
-  yield [[], Array.from({ length: array.length }, (_, i) => i)];
+  yield [[], Array.from({ length: array.length }, (_, i) => i)] as [
+    number[],
+    number[]
+  ];
 
   return array;
 }

@@ -10,7 +10,7 @@ import { Label } from "./components/label";
 import { Input } from "./components/input";
 import { Button } from "./components/button";
 import { Slider } from "./components/slider";
-import { useReducer } from "react";
+import { FormEvent, useReducer } from "react";
 import { cn } from "./utils";
 import {
   bubbleSortGenerator,
@@ -88,7 +88,7 @@ type State = {
   activeIndices: number[];
   // ! 已經處理完成的位置、不再需要處理的資料索引
   sortedIndices: number[];
-  // activeSortingFunction?: Generator<[number[], number[]]>
+  activeSortingFunction?: Generator<[number[], number[]]>;
   isSorting: boolean;
 };
 
@@ -106,12 +106,18 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         isSorting: false,
+        activeIndices: [],
+        sortedIndices: [],
+        activeSortingFunction: undefined,
         randomArray: getRandomElements(state.randomArray.length),
       };
     // 排序
     case "SORT":
       return {
         ...state,
+        activeSortingFunction:
+          state.activeSortingFunction ??
+          getSortingFunction(state.sortingAlgorithm)(state.randomArray),
         isSorting: true,
       };
     // 暫停
@@ -125,12 +131,16 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         isSorting: false,
+        activeSortingFunction: undefined,
       };
     // 更換排序法
     case "CHANGE_ALGORITHM":
       if (state.isSorting) return state;
       return {
         ...state,
+        activeIndices: [],
+        sortedIndices: [],
+        activeSortingFunction: undefined,
         sortingAlgorithm: action.payload,
       };
     // 更換速度
@@ -154,7 +164,16 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         isSorting: false,
+        activeIndices: [],
+        sortedIndices: [],
+        activeSortingFunction: undefined,
         randomArray: getRandomElements(action.payload),
+      };
+    case "SET_INDICES":
+      return {
+        ...state,
+        activeIndices: action.payload.active,
+        sortedIndices: action.payload.sorted,
       };
     default:
       throw new Error(`Invalid action: ${action}`);
@@ -181,10 +200,23 @@ function App() {
     sortedIndices: [],
   });
 
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+
+    if (isSorting) {
+      dispatch({ type: "STOP" });
+    } else {
+      dispatch({ type: "SORT" });
+    }
+  }
+
   return (
     <>
       <div className="h-full flex flex-col gap-1 min-w-32 md:gap-2">
-        <form className="grid gap-4 items-end grid-cols-2 md:grid-cols-4 md:gap-8">
+        <form
+          onSubmit={handleSubmit}
+          className="grid gap-4 items-end grid-cols-2 md:grid-cols-4 md:gap-8"
+        >
           <div className="flex flex-col gap-1 md:gap-2">
             <Label htmlFor="algorithm">Algorithm</Label>
             <SelectRoot
