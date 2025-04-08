@@ -22,6 +22,10 @@ import {
   insertionSort_v1_str,
   insertionSort_v2_str,
 } from "./algorithms/insertion";
+import {
+  selectionSort_v1_str,
+  selectionSortGenerator,
+} from "./algorithms/selection";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -29,7 +33,9 @@ const SORTING_ALGORITHMS = {
   bubble: {
     title: "🫧 bubble 氣泡排序法",
     point: "兩兩相比，大的往後換",
-    note: "每次比對相鄰的兩個數字，把比較大的慢慢「浮」到右邊（也就是陣列的尾端），一輪一輪重複這個動作。也就是說，每一輪最大的項目都會被排好，也就是說會進行 n(n - 1) / 2 次，（下一輪次數會逐一遞減）。可以優化的方式是，設一個 flag 紀錄在第一輪結束後，發現都沒有交換時，表示已經是有序的，就不用再處理了",
+    note: "每次比對相鄰的兩個數字，把比較大的慢慢「浮」到右邊（也就是陣列的尾端），一輪一輪重複這個動作。也就是說，每一輪最大的項目都會被排好，總共會進行 n(n - 1) / 2 次，（下一輪次數會逐一遞減）。",
+    optimization:
+      "設一個 flag 紀錄在第一輪結束後，發現都沒有交換時，表示已經是有序的，就不用再處理了！",
     form: [
       "時間複雜度：最壞與平均都是 O(n²)",
       "穩定性：穩定排序（相同數字順序不會改變）",
@@ -42,7 +48,8 @@ const SORTING_ALGORITHMS = {
   insertion: {
     title: "🃏 insertion 插入排序法",
     point: "一邊掃描，一邊插入到對的位置",
-    note: "將陣列分成「已排序」與「未排序」兩部分，每次從未排序區中選出一個元素，插入到已排序區的正確位置。想像在排撲克牌，每抽一張牌，就從右往左插入到對的位置，直到牌變得整整齊齊。",
+    note: "將陣列分成「已排序」與「未排序」兩部分，每次從未排序區中選出一個元素，插入到已排序區的正確位置。想像在排撲克牌，每抽一張牌，就從右往左插入到對的位置，直到牌變得整整齊齊。所以只要一插入到對的就可以再進入下一輪比較。",
+    optimization: "不一邊找一邊交換！先找出索引位置，再插入。",
     form: [
       "時間複雜度：最壞 O(n²)、最好 O(n) 、平均是 O(n²)",
       "穩定性：穩定排序（相同數字順序不會改變）",
@@ -53,17 +60,24 @@ const SORTING_ALGORITHMS = {
     algorithmsGenerator: insertionSortGenerator,
   },
   selection: {
-    title: "selection 選擇排序",
-    point: "",
-    note: "",
-    form: [],
-    func: [],
-    algorithmsGenerator: bubbleSortGenerator,
+    title: "🔄 selection 選擇排序",
+    point: "每輪找最小，前面換一換",
+    note: "每一輪從還沒排序的區段中，找出最小值，然後把它交換到正確位置。",
+    optimization: "❌",
+    form: [
+      "時間複雜度：固定為 O(n²)，比較次數固定 n(n-1)/2 次（無論排序狀況）",
+      "穩定性：不穩定（意思是如果有重複元素，排序後相對順序不一定保留）",
+      "額外空間： O(1)（原地排序）",
+      "👎 缺點：效率低，不適合大資料量",
+    ],
+    func: [selectionSort_v1_str],
+    algorithmsGenerator: selectionSortGenerator,
   },
   quick: {
     title: "quick 快速排序法",
     point: "",
     note: "",
+    optimization: "❌",
     form: [],
     func: [],
     algorithmsGenerator: bubbleSortGenerator,
@@ -72,6 +86,7 @@ const SORTING_ALGORITHMS = {
     title: "merge 合併排序法",
     point: "",
     note: "",
+    optimization: "❌",
     form: [],
     func: [],
     algorithmsGenerator: bubbleSortGenerator,
@@ -364,7 +379,10 @@ function App() {
                   "grow flex items-end justify-center pb-2 bg-muted",
                   sortedIndices.includes(index) && "bg-secondary",
                   activeIndices[0] === index && "bg-accent",
-                  activeIndices[1] === index && "bg-accent opacity-70"
+                  activeIndices[1] === index && "bg-accent opacity-70",
+                  activeIndices.length > 2 &&
+                    activeIndices[2] === index &&
+                    "bg-accent"
                 )}
                 style={{ height: `${value}%` }}
               />
@@ -380,12 +398,15 @@ function App() {
             <span className="text-sm">
               {SORTING_ALGORITHMS[sortingAlgorithm].note}
             </span>
-            <ul className="mt-10 text-sm">
+            <p className="mt-8 text-sm">
+              🌟 優化： {SORTING_ALGORITHMS[sortingAlgorithm].optimization}
+            </p>
+            <ul className="mt-8 text-sm">
               {SORTING_ALGORITHMS[sortingAlgorithm].form.map((i) => {
                 return <li key={i}>- {i}</li>;
               })}
             </ul>
-            <ul className="mt-10 text-sm">
+            <ul className="mt-8 text-sm">
               {SORTING_ALGORITHMS[sortingAlgorithm].func.map((i, idx) => {
                 return <FunctionViewer func={i} key={idx} />;
               })}

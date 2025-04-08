@@ -1,5 +1,5 @@
 const bubbleSort_v1_str = `function bubbleSort_v1(array: number[]) {
-  for (let i = 0; i < array.length - 1; i++) {
+  for (let i = 0; i < array.length; i++) {
     for (let u = 0; u < array.length - 1 - i; u++) {
       // 左右相比
       if (array[u] > array[u + 1]) {
