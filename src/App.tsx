@@ -14,13 +14,18 @@ import { FormEvent, useEffect, useReducer } from "react";
 import { cn } from "./utils";
 import {
   bubbleSortGenerator,
-  bubbleSort_v1,
-  bubbleSort_v2,
+  bubbleSort_v1_str,
+  bubbleSort_v2_str,
 } from "./algorithms/bubble";
+import {
+  insertionSortGenerator,
+  insertionSort_v1_str,
+  insertionSort_v2_str,
+} from "./algorithms/insertion";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-const SORTING_ALGORITHMS_NOTE = {
+const SORTING_ALGORITHMS = {
   bubble: {
     title: "🫧 bubble 氣泡排序法",
     point: "兩兩相比，大的往後換",
@@ -28,18 +33,24 @@ const SORTING_ALGORITHMS_NOTE = {
     form: [
       "時間複雜度：最壞與平均都是 O(n²)",
       "穩定性：穩定排序（相同數字順序不會改變）",
-      "額外空間：O(1)（原地排序）",
-      "👍 優點：實作簡單，教學友善",
+      "額外空間： O(1)（原地排序）",
       "👎 缺點：效率低，不適合大資料量",
     ],
-    func: [bubbleSort_v1, bubbleSort_v2],
+    func: [bubbleSort_v1_str, bubbleSort_v2_str],
+    algorithmsGenerator: bubbleSortGenerator,
   },
   insertion: {
-    title: "insertion 插入排序法",
-    point: "",
-    note: "",
-    form: [],
-    func: [],
+    title: "🃏 insertion 插入排序法",
+    point: "一邊掃描，一邊插入到對的位置",
+    note: "將陣列分成「已排序」與「未排序」兩部分，每次從未排序區中選出一個元素，插入到已排序區的正確位置。想像在排撲克牌，每抽一張牌，就從右往左插入到對的位置，直到牌變得整整齊齊。",
+    form: [
+      "時間複雜度：最壞 O(n²)、最好 O(n) 、平均是 O(n²)",
+      "穩定性：穩定排序（相同數字順序不會改變）",
+      "額外空間： O(1)（原地排序）",
+      "👎 缺點：效率低，不適合大資料量",
+    ],
+    func: [insertionSort_v1_str, insertionSort_v2_str],
+    algorithmsGenerator: insertionSortGenerator,
   },
   selection: {
     title: "selection 選擇排序",
@@ -47,6 +58,7 @@ const SORTING_ALGORITHMS_NOTE = {
     note: "",
     form: [],
     func: [],
+    algorithmsGenerator: bubbleSortGenerator,
   },
   quick: {
     title: "quick 快速排序法",
@@ -54,6 +66,7 @@ const SORTING_ALGORITHMS_NOTE = {
     note: "",
     form: [],
     func: [],
+    algorithmsGenerator: bubbleSortGenerator,
   },
   merge: {
     title: "merge 合併排序法",
@@ -61,13 +74,14 @@ const SORTING_ALGORITHMS_NOTE = {
     note: "",
     form: [],
     func: [],
+    algorithmsGenerator: bubbleSortGenerator,
   },
 };
 
 const MAX_ARRAY_LENGTH = 200;
 const MIN_ARRAY_LENGTH = 10;
-const MAX_SPEED = 50;
-const MIN_SPEED = 1;
+const MAX_SPEED = 10;
+const MIN_SPEED = 0.5;
 const OPERATIONS_PER_SECOND = 2;
 
 type Action =
@@ -79,7 +93,7 @@ type Action =
   | { type: "CHANGE_SPEED"; payload: number }
   | { type: "CHANGE_ARRAY_LENGTH"; payload: number }
   | { type: "SET_INDICES"; payload: { active: number[]; sorted: number[] } };
-type SortingAlgorithm = keyof typeof SORTING_ALGORITHMS_NOTE;
+type SortingAlgorithm = keyof typeof SORTING_ALGORITHMS;
 type State = {
   sortingAlgorithm: SortingAlgorithm;
   sortingSpeed: number;
@@ -117,7 +131,9 @@ function reducer(state: State, action: Action): State {
         ...state,
         activeSortingFunction:
           state.activeSortingFunction ??
-          getSortingFunction(state.sortingAlgorithm)(state.randomArray),
+          SORTING_ALGORITHMS[state.sortingAlgorithm].algorithmsGenerator(
+            state.randomArray
+          ),
         isSorting: true,
       };
     // 暫停
@@ -280,7 +296,7 @@ function App() {
                 <SelectValue placeholder="Sorting Algorithm" />
               </SelectTrigger>
               <SelectPortalContent>
-                {Object.entries(SORTING_ALGORITHMS_NOTE).map(
+                {Object.entries(SORTING_ALGORITHMS).map(
                   ([algorithm, { title }]) => (
                     <SelectItem key={algorithm} value={algorithm}>
                       {title}
@@ -356,21 +372,21 @@ function App() {
           </div>
           <div className="flex-2/5 h-full p-8 pr-0 border-l-2 ml-8 text-left overflow-scroll">
             <h2 className="text-2xl mb-4 font-bold">
-              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].title}
+              {SORTING_ALGORITHMS[sortingAlgorithm].title}
             </h2>
             <p className="font-medium mb-1.5">
-              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].point}
+              {SORTING_ALGORITHMS[sortingAlgorithm].point}
             </p>
             <span className="text-sm">
-              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].note}
+              {SORTING_ALGORITHMS[sortingAlgorithm].note}
             </span>
             <ul className="mt-10 text-sm">
-              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].form.map((i) => {
+              {SORTING_ALGORITHMS[sortingAlgorithm].form.map((i) => {
                 return <li key={i}>- {i}</li>;
               })}
             </ul>
             <ul className="mt-10 text-sm">
-              {SORTING_ALGORITHMS_NOTE[sortingAlgorithm].func.map((i, idx) => {
+              {SORTING_ALGORITHMS[sortingAlgorithm].func.map((i, idx) => {
                 return <FunctionViewer func={i} key={idx} />;
               })}
             </ul>
@@ -381,29 +397,12 @@ function App() {
   );
 }
 
-const FunctionViewer = ({ func }: { func: (array: number[]) => number[] }) => {
+const FunctionViewer = ({ func }: { func: string }) => {
   return (
     <SyntaxHighlighter language="javascript" style={vscDarkPlus}>
-      {func.toString()}
+      {func}
     </SyntaxHighlighter>
   );
 };
-
-function getSortingFunction(algorithm: SortingAlgorithm) {
-  switch (algorithm) {
-    case "bubble":
-      return bubbleSortGenerator;
-    case "insertion":
-      return bubbleSortGenerator;
-    case "selection":
-      return bubbleSortGenerator;
-    case "quick":
-      return bubbleSortGenerator;
-    case "merge":
-      return bubbleSortGenerator;
-    default:
-      throw new Error(`Invalid algorithm: ${algorithm satisfies never}`);
-  }
-}
 
 export default App;

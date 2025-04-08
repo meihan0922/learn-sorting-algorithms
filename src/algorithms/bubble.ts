@@ -1,4 +1,4 @@
-export function bubbleSort_v1(array: number[]) {
+const bubbleSort_v1_str = `function bubbleSort_v1(array: number[]) {
   for (let i = 0; i < array.length - 1; i++) {
     for (let u = 0; u < array.length - 1 - i; u++) {
       // 左右相比
@@ -9,10 +9,10 @@ export function bubbleSort_v1(array: number[]) {
     }
   }
   return array;
-}
+}`;
 
-// 再優化，每一次都必須做雙迴圈檢查嗎？
-export function bubbleSort_v2(array: number[]) {
+const bubbleSort_v2_str = `function bubbleSort_v2(array: number[]) {
+  // 再優化，每一次都必須做雙迴圈檢查嗎？
   let n = array.length;
   // 有交換嗎？如果一整輪都沒換過值，代表整個陣列已經有序了，就可以提前跳出迴圈。
   let swapped = true;
@@ -29,7 +29,9 @@ export function bubbleSort_v2(array: number[]) {
     n--;
   }
   return array;
-}
+}`;
+
+export { bubbleSort_v1_str, bubbleSort_v2_str };
 
 export function* bubbleSortGenerator(array: number[]) {
   let n = array.length;
