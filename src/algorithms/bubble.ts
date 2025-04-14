@@ -15,15 +15,15 @@ const bubbleSort_v2_str = `function bubbleSort_v2(array: number[]) {
   // 再優化，每一次都必須做雙迴圈檢查嗎？
   let n = array.length;
   // 有交換嗎？如果一整輪都沒換過值，代表整個陣列已經有序了，就可以提前跳出迴圈。
-  let swapped = true;
-  while (swapped) {
-    swapped = false;
+  let isSwipe = true;
+  while (isSwipe) {
+    isSwipe = false;
     for (let i = 0; i < n - 1; i++) {
       // 左右相比
       if (array[i] > array[i + 1]) {
         // 交換
         [array[i], array[i + 1]] = [array[i + 1], array[i]];
-        swapped = true;
+        isSwipe = true;
       }
     }
     n--;
@@ -36,9 +36,9 @@ export { bubbleSort_v1_str, bubbleSort_v2_str };
 export function* bubbleSortGenerator(array: number[]) {
   let n = array.length;
   // 有交換嗎？如果一整輪都沒換過值，代表整個陣列已經有序了，就可以提前跳出迴圈。
-  let swapped = true;
-  while (swapped) {
-    swapped = false;
+  let isSwipe = true;
+  while (isSwipe) {
+    isSwipe = false;
     for (let i = 0; i < n - 1; i++) {
       yield [
         [i, i + 1], // 標記正在比較的位置
@@ -51,7 +51,7 @@ export function* bubbleSortGenerator(array: number[]) {
       if (array[i] > array[i + 1]) {
         // 交換
         [array[i], array[i + 1]] = [array[i + 1], array[i]];
-        swapped = true;
+        isSwipe = true;
         // 做交換的動畫
         yield [
           [i + 1, i],
