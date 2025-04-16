@@ -19,6 +19,11 @@ import {
   quickSort_v2,
   quickSort_v3,
 } from "./algorithms/quick";
+import {
+  mergeSort_v1,
+  mergeSort_v2,
+  mergeSortGenerator,
+} from "./algorithms/merge";
 
 export const SORTING_ALGORITHMS = {
   bubble: {
@@ -82,12 +87,19 @@ export const SORTING_ALGORITHMS = {
     algorithmsGenerator: quickSortGenerator,
   },
   merge: {
-    title: "merge 合併排序法",
-    point: "",
-    note: "",
-    optimization: "❌",
-    form: [],
-    func: [],
-    algorithmsGenerator: bubbleSortGenerator,
+    title: "🔪 merge 合併排序法",
+    point:
+      "🔪「一刀切一半、一刀切一半」切到底， 🍰「小份先排好，再慢慢組成大份」",
+    note: "合併排序主要包含兩個步驟: 1️⃣ 分割: 把陣列不斷對半分，直到每個子陣列都只剩一個元素為止。 2️⃣ 合併: 把這些小陣列「兩兩合併」，並且在合併過程中保持順序，最終組合成一個完整有序的陣列。 比方： [99, 16, 15, 26, 89]，[99, 16] | [15, 26, 89]，分割成單個再排列後 [16, 99] | [[15] | [26, 89]]，合併右邊，[16, 99] | [15, 26, 89]，接著 while 迴圈處理比較和插入即可",
+    optimization:
+      "1️⃣ 原地劃分（in-place），不需額外複製整個陣列，空間更省，插入時保留順序，但需要大量搬移元素 2️⃣ 可以改寫成非遞迴，針對大型資料最穩定，動畫因為要直觀，寫成遞迴版本",
+    form: [
+      "時間複雜度：O(n log n)，分割 log n 次、每次合併花 n",
+      "時間複雜度：O(n)，需要額外陣列暫存合併結果",
+      "穩定排序: ✅ 是	相同元素不會交換位置",
+      "‼️ 大型資料量、需要穩定排序",
+    ],
+    func: [mergeSort_v1, mergeSort_v2],
+    algorithmsGenerator: mergeSortGenerator,
   },
 };

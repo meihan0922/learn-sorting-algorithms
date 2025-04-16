@@ -202,6 +202,7 @@ export function* quickSortGenerator(array: number[]) {
     let { start, end } = stack.pop()!;
 
     while (start < end) {
+      // 分大小堆，並回傳 pivot
       const pivotIndex = yield* partition(array, start, end, sortedIndices);
 
       // 以較小的區間優先處理
