@@ -1,4 +1,4 @@
-const insertionSort_v1_str = `function insertionSort_v1(array: number[]) {
+export const insertionSort_v1_str = `function insertionSort_v1(array: number[]) {
   for (let i = 0; i < array.length; i++) {
     // 如果左邊大於右邊就交換
     for (let j = i; j > 0 && array[j] < array[j - 1]; j--) {
@@ -8,7 +8,7 @@ const insertionSort_v1_str = `function insertionSort_v1(array: number[]) {
   return array;
 }`;
 
-const insertionSort_v2_str = `function insertionSort_v2(array: number[]) {
+export const insertionSort_v2_str = `function insertionSort_v2(array: number[]) {
   // 原本是：『一邊比較一邊交換』，優化後：先找出要插入的位置，把元素搬一格，最後一次插入
   for (let i = 0; i < array.length; i++) {
     const current = array[i]; // 當前比較值
@@ -24,8 +24,6 @@ const insertionSort_v2_str = `function insertionSort_v2(array: number[]) {
   }
   return array;
 }`;
-
-export { insertionSort_v1_str, insertionSort_v2_str };
 
 export function* insertionSortGenerator(array: number[]) {
   for (let i = 0; i < array.length; i++) {
